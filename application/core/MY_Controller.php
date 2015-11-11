@@ -33,81 +33,40 @@ class P_Controller extends CI_Controller {
 	public $pageClass = 'normal';
 	public $menus = array();
     public $need_plus = '';
-    public $isVip = false;
     public $hasSearch = true;
     public $backInt = 0;
     public $res_ver = '2.0.3.1014';
     public $has_menu = true;
+    public $is_logined = false;
 
-	function __construct($login_verify = true,$userTyp='a') {
+	function __construct() {
 
 		parent::__construct();
-		date_default_timezone_set("Asia/Shanghai");
-        P_Controller::Register();
+	  date_default_timezone_set("Asia/Shanghai");
+    P_Controller::Register();
 
-		$this->is_login = false;
-        // $this->db = $this->cimongo;
-        if (DB_TYPE=="MONGO"){
-            $this->db = $this->cimongo;
-        } else {
+    $this->db = $this->cimongo;
 
-        }
-        $this->force_lightbox = false;
-		$this->load->helper('url');
-        $this->controller_name = ($this->uri->segment(1)===false||$this->uri->segment(1)=="")?'index':$this->uri->segment(1);
-        $this->system_name = substr($this->controller_name,0,1);
-        $this->method_name = ($this->uri->segment(2)===false||$this->uri->segment(2)=="")?'index':$this->uri->segment(2);
-        if ($this->method_name =='info'){
-            $this->method_name = 'index';
-        }
-        $this->searchInfo = array('t'=>'no');
+    $this->load->helper('url');
+    $this->controller_name = ($this->uri->segment(1)===false||$this->uri->segment(1)=="")?'index':$this->uri->segment(1);
+    $this->method_name = ($this->uri->segment(2)===false||$this->uri->segment(2)=="")?'index':$this->uri->segment(2);
+    if ($this->method_name =='info'){
+        $this->method_name = 'index';
+    }
+    $this->searchInfo = array('t'=>'no');
 
-        $this->userTyp = $userTyp;
-        if ($userTyp=='u'){
-            $this->realLogin = $this->adminlogin;
-        } else {
-            $this->realLogin = $this->login;
-        }
+    $this->title = array($this->config->item('base_title'));
+    $this->perPage = 10;
+    $this->cur_page = 1;
 
-        if($login_verify) {
-			$this->login_verify(true);
-            $this->canEdit = $this->checkEditRule();
-		} else {
-            $this->login_verify(false);
-		}
-        $this->title = array($this->config->item('base_title'));
-        $this->perPage = 10;
-        $this->cur_page = 1;
-	}
-
-	public function admin_load_menus(){
-        $this->load->library('menu');
-
-		$this->menus = $this->menu->load_menu($this->userInfo->field_list['typ']->value);
-
-        array_unshift($this->title,$this->menus[$this->controller_name]['menu_array'][$this->method_name]['name']);
+    if ($this->login->is_login()){
+      $this->logined = true;
+    }
 	}
 
 
 	function setViewType($viewType){
 		$this->viewType =$viewType;
-	}
-	function checkEditRule(){
-		if ($this->controller_name=="crm"){
-			return $this->checkActionRule("Crm","Edit");
-		} else {
-			return $this->checkActionRule("Project","Edit");
-		}
-
-	}
-	function checkRule($module,$action){
-		if ($this->accessRule[$module]!=null){
-			if (!in_array($action, $this->accessRule[$module])){
-				$this->display_error("no_access");
-			}
-		} else {
-			$this->display_error("no_access");
-		}
 	}
 
 	function checkActionRule($module,$action){
@@ -169,117 +128,6 @@ class P_Controller extends CI_Controller {
 		if ($this->searchInfo['t']=="quick"){
 			$this->quickSearchValue = $this->searchInfo['i'];
 		}
-	}
-
-    function load_org_info($force_check = false) {
-        if (!$this->is_login) {
-            return;
-        }
-        if ($this->userInfo->field_list['orgId']->isEmpty() || $this->userInfo->field_list['orgId']->value_checked<=0) {
-            if ($force_check){
-                header("Location:".site_url('aindex/index'));
-            }
-            return;
-        }
-
-        $this->load->model('records/org_model',"myOrgInfo");
-
-        $this->myOrgInfo->init_with_id($this->userInfo->field_list['orgId']->value);
-    }
-
-	function login_verify($force=true) {
-        if ($this->userTyp=="m"){
-            $this->load->model('records/user_model',"userInfo");
-        } else {
-            $this->load->model('records/adminuser_model',"userInfo");
-        }
-		if ($this->realLogin->is_login() !== true) {
-            if ($this->userTyp=="m"){
-                $this->load->library("session");
-                $third_plat = $this->session->userdata('third_plat');
-                $third_id = $this->session->userdata('third_id');
-                //检查微信登录
-                if ($third_plat!==false && $third_id!==false){
-                    //有微信，检查是否已经绑定
-                    $login_rst = $this->userInfo->verify_third_login($third_plat,$third_id);
-
-                	if ($this->userInfo->is_inited){
-                		$this->realLogin->process_login($this->userInfo->field_list['phone']->value,$this->userInfo->uid,true,true);
-                    }
-                }
-            }
-        }
-        if ($this->realLogin->is_login() !== true) {
-            if ($force){
-                $this->goto_login();
-            } else {
-                return;
-            }
-        }
-
-		$this->uid = $this->realLogin->uid;
-        if (!MongoId::isValid($this->uid)){
-            if ($force){
-                $this->goto_login();
-            } else {
-                return;
-            }
-        }
-
-
-
-		$init_result = $this->userInfo->init_by_uid($this->uid);
-
-		if ($init_result<0){
-            if ($force==true){
-                $this->realLogin->logout();
-                $this->goto_login();
-            }
-            $this->uid = null;
-		} else {
-            $this->is_login = true;
-            if (isset($this->userInfo->field_list['orgId'])){
-                $this->myOrgId = $this->userInfo->field_list['orgId']->value;
-
-            }
-		};
-        if ($this->userTyp=="u"){
-            $this->adminTyp = $this->userInfo->field_list['typ']->value;
-        }
-	}
-
-    function goto_login(){
-        if ($this->userTyp=="m"){
-            $this->load->library("session");
-            $third_plat = $this->session->userdata('third_plat');
-            $third_id = $this->session->userdata('third_id');
-            //检查微信登录
-            //如果有微信登录记录，直接跳绑定
-		//var_dump($third_plat,$third_id);exit;
-            if ($third_plat===false || $third_id===false){
-                //否则，跳 api
-                header("Location:".site_url('api/wxjump/index'));
-                exit;
-            } else {
-                //有微信，检查是否已经绑定
-                $login_rst = $this->userInfo->verify_third_login($third_plat,$third_id);
-
-            	if ($this->userInfo->is_inited){
-            		$this->realLogin->process_login($this->userInfo->field_list['phone']->value,$this->userInfo->uid,true,true);
-                } else {
-                    header("Location:".site_url('mindex/bind'));
-                    exit;
-                }
-            }
-        } else {
-            header("Location:".site_url($this->userTyp.'index/login'));
-            exit;
-        }
-    }
-
-	function login_init() {
-
-
 	}
 
 	public function genBreadCrumb(){

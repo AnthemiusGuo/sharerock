@@ -6,7 +6,7 @@ $config['host'] = "127.0.0.1";
 // Generally 27017
 $config['port'] = 27017;
 // The database you want to work on
-$config['db'] = "fixUCar";
+$config['db'] = "rockme";
 // Required if Mongo is running in auth mode
 $config['user'] = "";
 $config['pass'] = "";

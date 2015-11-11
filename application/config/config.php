@@ -19,7 +19,7 @@ define('DB_TYPE','MONGO');
 $config['base_url']	= '';
 $config['static_url']	= '/misc';
 $config['login_expire'] = 86400*365*10;
-$config['base_title'] = '专车道汽车品牌专修连锁';
+$config['base_title'] = '如梦 - 摇滚榜单与歌词翻译';
 
 //申请到的appid
 $config["qq"] = array(

@@ -1,6 +1,6 @@
 <?php if ( ! defined('BASEPATH')) exit('No direct script access allowed');
 
-class common extends P_Controller {
+class Common extends P_Controller {
 	function __construct() {
 		parent::__construct(true,'a');
 		$this->relates = array();

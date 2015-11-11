@@ -51,8 +51,6 @@ class Art extends common {
 
 	function needsInfo($needId="") {
         $this->show_method_name = 'index';
-		$this->login_verify();
-		$this->admin_load_menus();
 
 		$this->load->model('records/Needs_model',"needInfo");
 		$this->needInfo->init_with_id($needId);
