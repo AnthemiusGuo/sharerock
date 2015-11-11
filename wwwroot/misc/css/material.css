@@ -5774,7 +5774,7 @@ fieldset[disabled] .navbar .btn-link:focus {
   color: rgba(0, 0, 0, 0.84);
 }
 .navbar-inverse.navbar {
-  background-color: #3f51b5;
+  background-color: #212121;
   color: rgba(255, 255, 255, 0.84);
 }
 .navbar-inverse.navbar .navbar-form .form-control-wrapper input.form-control::placeholder,
